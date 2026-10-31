@@ -103,10 +103,10 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 7 — Implement `mcp/server.js`
 
-- [ ] Create `skeleton/mcp/server.js` implementing MCP 2024-11-05 stdio transport (JSON-RPC 2.0).
-- [ ] Handle `initialize`, `tools/list`, and `tools/call` for `judge` and `ledger_tail`.
-- [ ] Handle missing required parameters with a structured MCP error response.
-- [ ] Write unit tests in `skeleton/mcp/mcp.test.js` by spawning the server and sending JSON-RPC messages over stdio:
+- [x] Create `skeleton/mcp/server.js` implementing MCP 2024-11-05 stdio transport (JSON-RPC 2.0).
+- [x] Handle `initialize`, `tools/list`, and `tools/call` for `judge` and `ledger_tail`.
+- [x] Handle missing required parameters with a structured MCP error response.
+- [x] Write unit tests in `skeleton/mcp/mcp.test.js` by spawning the server and sending JSON-RPC messages over stdio:
   - `initialize` → valid `protocolVersion` and `serverInfo`.
   - `tools/list` → contains both `judge` and `ledger_tail`.
   - `tools/call judge` with valid params → verdict in result.
