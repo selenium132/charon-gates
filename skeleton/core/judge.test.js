@@ -57,6 +57,12 @@ describe('judge — status', () => {
     const v = await judge(gate, {}, BYTES);
     assert.equal(v.status, 'HOLD');
   });
+
+  it('D2: zero checks → HOLD', async () => {
+    const gate = { id: 'g', version: '1', checks: [] };
+    const v = await judge(gate, {}, BYTES);
+    assert.equal(v.status, 'HOLD');
+  });
 });
 
 describe('judge — Verdict shape', () => {

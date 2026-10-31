@@ -31,6 +31,11 @@ export async function judge(gateDef, evidence, artifactBytes) {
     return { status: 'HOLD', artifactHash: artH, gateHash: gateH, findings: [], ts };
   }
 
+  // Toll rule 1 corollary: a gate with no checks provides no measurement → HOLD.
+  if (gateDef.checks.length === 0) {
+    return { status: 'HOLD', artifactHash: artH, gateHash: gateH, findings: [], ts };
+  }
+
   /** @type {Finding[]} */
   const findings = [];
   let forceHold = false;
