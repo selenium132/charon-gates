@@ -18,10 +18,10 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 2 — Implement `core/hash.js`
 
-- [ ] Implement `artifactHash(bytes: Uint8Array): Promise<string>` using `globalThis.crypto.subtle.digest('SHA-256', bytes)`.
-- [ ] Implement `gateHash(gateDef: GateDef): Promise<string>` — serialise `{ id, version, checks: checkIds }` with sorted keys, UTF-8 encode, SHA-256.
-- [ ] Export both from `core/index.js`.
-- [ ] Write unit tests in `skeleton/core/hash.test.js`:
+- [x] Implement `artifactHash(bytes: Uint8Array): Promise<string>` using `globalThis.crypto.subtle.digest('SHA-256', bytes)`.
+- [x] Implement `gateHash(gateDef: GateDef): Promise<string>` — serialise `{ id, version, checks: checkIds }` with sorted keys, UTF-8 encode, SHA-256.
+- [x] Export both from `core/index.js`.
+- [x] Write unit tests in `skeleton/core/hash.test.js`:
   - Known-vector test: SHA-256 of empty bytes equals the known constant.
   - Known-vector test: `gateHash` of a fixed `GateDef` equals a precomputed constant.
   - Property test (P3): for two distinct `Uint8Array` inputs, `artifactHash` returns distinct strings.
