@@ -124,6 +124,15 @@ switch (subCommand) {
     const { flags, positionals } = parseArgs(rest);
     const [ledgerPath] = positionals;
     if (!ledgerPath) die(USAGE);
+
+    // Rule 5: override requires a human at an interactive terminal.
+    if (!process.stdin.isTTY) {
+      process.stderr.write(
+        'override requires an interactive terminal (process.stdin.isTTY must be true)\n'
+      );
+      process.exit(2);
+    }
+
     if (!flags.human) {
       process.stderr.write('--human is required for override\n');
       process.exit(2);
@@ -141,6 +150,20 @@ switch (subCommand) {
     // Find the latest verdict entry
     const lastVerdict = [...recent].reverse().find((e) => e.type === 'verdict');
     if (!lastVerdict) die('No verdict entry found in ledger', 1);
+
+    // Prompt the human to confirm by typing the first 8 chars of the artifact hash.
+    const expectedPrefix = lastVerdict.artifactHash.slice(0, 8);
+    process.stdout.write(
+      `Type the first 8 characters of the artifact hash to confirm (${expectedPrefix}): `
+    );
+    const typed = await new Promise((resolve) => {
+      const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: false });
+      rl.once('line', (line) => { rl.close(); resolve(line.trim()); });
+    });
+    if (typed !== expectedPrefix) {
+      process.stderr.write(`Hash prefix mismatch — override refused\n`);
+      process.exit(2);
+    }
 
     let entry;
     try {

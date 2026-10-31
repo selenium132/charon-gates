@@ -97,17 +97,15 @@ describe('verify-ledger sub-command', () => {
 });
 
 describe('override sub-command', () => {
-  it('valid override → entry appended, exit 0', async () => {
+  it('D7: override from non-TTY (pipe) → exit 2, stderr mentions terminal', async () => {
+    // Spawn always has isTTY=false/undefined on stdin — the guard must fire.
     const ledgerPath = join(tmpDir, 'override.jsonl');
-    // First add a verdict
     await runCLI(['judge', ARTIFACT, FAIL_GATE, '--ledger', ledgerPath]);
-    const { stdout, code } = await runCLI([
+    const { stderr, code } = await runCLI([
       'override', ledgerPath, '--reason', 'manual check', '--human', 'alice',
     ]);
-    assert.equal(code, 0);
-    const entry = JSON.parse(stdout);
-    assert.equal(entry.type, 'override');
-    assert.equal(entry.humanId, 'alice');
+    assert.equal(code, 2);
+    assert.ok(stderr.includes('interactive terminal') || stderr.includes('isTTY'));
   });
 
   it('override without --human → exit 2, stderr non-empty', async () => {
@@ -115,6 +113,17 @@ describe('override sub-command', () => {
     await runCLI(['judge', ARTIFACT, FAIL_GATE, '--ledger', ledgerPath]);
     const { stderr, code } = await runCLI([
       'override', ledgerPath, '--reason', 'no human',
+    ]);
+    assert.equal(code, 2);
+    assert.ok(stderr.length > 0);
+  });
+
+  it('D7: override from non-TTY (pipe) → exit 2, stderr non-empty', async () => {
+    const ledgerPath = join(tmpDir, 'override3.jsonl');
+    await runCLI(['judge', ARTIFACT, FAIL_GATE, '--ledger', ledgerPath]);
+    // runCLI uses spawn without a TTY (isTTY is undefined/false on piped stdin)
+    const { stderr, code } = await runCLI([
+      'override', ledgerPath, '--reason', 'agent attempt', '--human', 'bot',
     ]);
     assert.equal(code, 2);
     assert.ok(stderr.length > 0);
