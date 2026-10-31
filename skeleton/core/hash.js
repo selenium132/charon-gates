@@ -16,14 +16,26 @@ export async function artifactHash(bytes) {
 
 /**
  * Returns the SHA-256 hex digest of a stable serialisation of the gate definition.
- * Serialises `{ id, version, checks }` where `checks` is an array of `checkId`
- * strings (sorted key order), UTF-8 encoded.
+ * Serialises `{ id, version, checks }` where each check entry includes its
+ * `checkId`, its optional `params` object (keys sorted), and `fn.toString()`
+ * so that loosening a threshold or changing check logic changes the hash.
  * @param {GateDef} gateDef - The gate definition to hash.
  * @returns {Promise<string>} Lowercase 64-character hex string.
  */
 export async function gateHash(gateDef) {
   const payload = JSON.stringify({
-    checks: gateDef.checks.map((fn) => fn.checkId),
+    checks: gateDef.checks.map((fn) => ({
+      checkId: fn.checkId,
+      params:
+        fn.params != null
+          ? Object.fromEntries(
+              Object.keys(fn.params)
+                .sort()
+                .map((k) => [k, fn.params[k]])
+            )
+          : null,
+      source: fn.toString(),
+    })),
     id: gateDef.id,
     version: gateDef.version,
   });
