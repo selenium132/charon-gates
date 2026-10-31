@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seance — Pre-submission Gate</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0b0a07;
+      --surface: #13120e;
+      --surface2:#1a1914;
+      --text:    #f0dfa8;
+      --dim:     #8a7d58;
+      --pass:    #3a7d44;
+      --fail:    #8b1a1a;
+      --hold:    #6b5a2e;
+      --amber:   #c8922a;
+      --border:  #2e2b20;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      min-height: 100dvh;
+    }
+
+    a { color: var(--dim); }
+    a:hover { color: var(--text); }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 2.5rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    .site-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--text);
+    }
+
+    .site-sub {
+      font-size: 0.8rem;
+      color: var(--dim);
+      margin-top: 0.25rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Section headings */
+    .section-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    /* Form grid */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 560px) {
+      .input-grid { grid-template-columns: 1fr; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 0.3rem; }
+
+    textarea {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.6rem 0.75rem;
+      font-family: monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 110px;
+      width: 100%;
+    }
+    textarea:focus {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+      border-color: var(--amber);
+    }
+    textarea::placeholder { color: var(--dim); }
+
+    /* File row */
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .file-btn {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .file-btn:hover {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--bg);
+    }
+    .file-btn:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    #file-label {
+      font-size: 0.78rem;
+      color: var(--dim);
+      font-family: monospace;
+      word-break: break-all;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      align-items: center;
+    }
+
+    button {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover:not(:disabled) {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--bg);
+    }
+    button:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    #btn-run {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--bg);
+      font-weight: 600;
+    }
+    #btn-run:hover:not(:disabled) {
+      background: #e0a430;
+      border-color: #e0a430;
+    }
+
+    .synthetic-label {
+      font-size: 0.72rem;
+      color: var(--dim);
+      align-self: center;
+    }
+
+    /* Status */
+    #status-line {
+      min-height: 1.4em;
+      font-size: 0.8rem;
+      color: var(--dim);
+      font-family: monospace;
+      margin-bottom: 0.4rem;
+    }
+
+    /* Privacy */
+    .privacy {
+      font-size: 0.78rem;
+      color: var(--dim);
+      margin-top: 0.4rem;
+    }
+
+    /* Results */
+    #verdict-area, #chart-area { margin-top: 1.5rem; }
+
+    /* Ledger section */
+    #ledger-section {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .ledger-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 0.5rem;
+    }
+    #ledger-area { margin-bottom: 0.75rem; }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    @media (max-width: 480px) {
+      .btn-row { flex-direction: column; align-items: stretch; }
+      button { width: 100%; }
+      .file-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="site-title">Seance</div>
+      <div class="site-sub">Pre-submission gate · machine learning competitions</div>
+    </header>
+
+    <main>
+      <!-- Evidence inputs -->
+      <div class="input-grid">
+        <div class="field">
+          <label class="section-label" for="evidence-input">
+            Paired scores — columns: id, candidate, best
+          </label>
+          <textarea
+            id="evidence-input"
+            name="evidence"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="id,candidate,best&#10;row1,0.872,0.850&#10;row2,0.868,0.847"
+            aria-label="Paired scores CSV: columns id, candidate, best"
+          ></textarea>
+        </div>
+        <div class="field">
+          <label class="section-label" for="submissions-input">
+            Earlier submissions — columns: hash, local, public
+          </label>
+          <textarea
+            id="submissions-input"
+            name="submissions"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="hash,local,public&#10;abc123,0.850,0.845&#10;def456,0.842,0.838"
+            aria-label="Earlier submissions CSV: columns hash, local, public"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Optional file (for hash) -->
+      <div class="file-row">
+        <label>
+          <span class="file-btn" tabindex="0" role="button"
+            onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('file-input').click()}"
+          >Choose submission file</span>
+          <input
+            id="file-input"
+            type="file"
+            style="display:none"
+            aria-label="Optional: submission file for SHA-256 identity check"
+          />
+        </label>
+        <span id="file-label" aria-live="polite">No file chosen — identity check uses pasted text</span>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="btn-row">
+        <button id="btn-run" type="button">Run gate</button>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="btn-row">
+        <button id="btn-ghost" type="button">The ghost</button>
+        <button id="btn-real" type="button">The real thing</button>
+        <span class="synthetic-label" aria-label="These buttons use synthetic data">synthetic samples — no file needed</span>
+      </div>
+
+      <div id="status-line" role="status" aria-live="polite"></div>
+      <p class="privacy">Evidence stays in the browser. Nothing is sent to any server.</p>
+
+      <section id="verdict-area" aria-label="Verdict"></section>
+      <section id="chart-area" aria-label="Bootstrap chart"></section>
+
+      <section id="ledger-section" hidden>
+        <p class="ledger-title">Ledger</p>
+        <div id="ledger-area" role="status" aria-live="polite"></div>
+        <button id="btn-download" type="button">Download ledger as JSONL</button>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./ui.js"></script>
+</body>
+</html>
