@@ -69,9 +69,9 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 5 — Implement `core/override.js`
 
-- [ ] Implement `buildOverrideEntry(verdict, reason, humanId)` following the design (§3.4).
-- [ ] Export from `core/index.js`.
-- [ ] Write unit tests in `skeleton/core/override.test.js`:
+- [x] Implement `buildOverrideEntry(verdict, reason, humanId)` following the design (§3.4).
+- [x] Export from `core/index.js`.
+- [x] Write unit tests in `skeleton/core/override.test.js`:
   - Unit: valid call returns entry with `type: 'override'`, correct `artifactHash`, `gateHash`, `humanId`, `reason`, `originalStatus`.
   - Unit: empty-string `humanId` throws `"override requires a named human"`.
   - Unit: `null` `humanId` throws.
