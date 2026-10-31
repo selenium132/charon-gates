@@ -7,11 +7,23 @@ import { artifactHash, gateHash } from './hash.js';
 /** @import { GateDef, Evidence, Verdict, Finding } from './types.js' */
 
 /**
+ * Returns true if `v` is a valid finite measured value (not NaN, not Infinity).
+ * Strings and booleans are allowed (they are not numeric and not infinite).
+ * @param {unknown} v
+ * @returns {boolean}
+ */
+function isValidMeasured(v) {
+  if (typeof v === 'number') return Number.isFinite(v);
+  return true; // string or boolean are valid evidence values
+}
+
+/**
  * Runs every check in `gateDef` against `evidence` and returns a Verdict.
  *
  * Status precedence: HOLD > FAIL > PASS.
- * HOLD is triggered by: null/undefined evidence, a check that throws, or a
- * check that returns a finding with `measured` equal to null or undefined.
+ * HOLD is triggered by: null/undefined evidence, zero checks, a check that
+ * throws, a finding with `measured` equal to null/undefined/NaN/Infinity, or
+ * a finding whose `passed` is not a boolean.
  *
  * @param {GateDef} gateDef - The gate definition (checks + metadata).
  * @param {Evidence | null | undefined} evidence - Structured evidence object.
@@ -47,6 +59,10 @@ export async function judge(gateDef, evidence, artifactBytes) {
     try {
       finding = await check(evidence);
       if (finding.measured == null) {
+        forceHold = true;
+      } else if (!isValidMeasured(finding.measured)) {
+        forceHold = true;
+      } else if (typeof finding.passed !== 'boolean') {
         forceHold = true;
       } else if (!finding.passed) {
         anyFail = true;

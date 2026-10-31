@@ -63,6 +63,54 @@ describe('judge — status', () => {
     const v = await judge(gate, {}, BYTES);
     assert.equal(v.status, 'HOLD');
   });
+
+  it('D3: measured NaN → HOLD', async () => {
+    const check = (_ev) => ({ checkId: 'c', measured: NaN, threshold: 1, unit: null, passed: true });
+    check.checkId = 'c';
+    const gate = { id: 'g', version: '1', checks: [check] };
+    const v = await judge(gate, {}, BYTES);
+    assert.equal(v.status, 'HOLD');
+  });
+
+  it('D3: measured Infinity → HOLD', async () => {
+    const check = (_ev) => ({ checkId: 'c', measured: Infinity, threshold: 1, unit: null, passed: true });
+    check.checkId = 'c';
+    const gate = { id: 'g', version: '1', checks: [check] };
+    const v = await judge(gate, {}, BYTES);
+    assert.equal(v.status, 'HOLD');
+  });
+
+  it('D3: measured -Infinity → HOLD', async () => {
+    const check = (_ev) => ({ checkId: 'c', measured: -Infinity, threshold: 1, unit: null, passed: true });
+    check.checkId = 'c';
+    const gate = { id: 'g', version: '1', checks: [check] };
+    const v = await judge(gate, {}, BYTES);
+    assert.equal(v.status, 'HOLD');
+  });
+
+  it('D3: measured 0 (falsy finite) → PASS (not HOLD)', async () => {
+    const check = (_ev) => ({ checkId: 'c', measured: 0, threshold: 0, unit: null, passed: true });
+    check.checkId = 'c';
+    const gate = { id: 'g', version: '1', checks: [check] };
+    const v = await judge(gate, {}, BYTES);
+    assert.equal(v.status, 'PASS');
+  });
+
+  it('D3: passed is a string → HOLD', async () => {
+    const check = (_ev) => ({ checkId: 'c', measured: 1, threshold: 1, unit: null, passed: 'yes' });
+    check.checkId = 'c';
+    const gate = { id: 'g', version: '1', checks: [check] };
+    const v = await judge(gate, {}, BYTES);
+    assert.equal(v.status, 'HOLD');
+  });
+
+  it('D3: passed is 1 (number) → HOLD', async () => {
+    const check = (_ev) => ({ checkId: 'c', measured: 1, threshold: 1, unit: null, passed: 1 });
+    check.checkId = 'c';
+    const gate = { id: 'g', version: '1', checks: [check] };
+    const v = await judge(gate, {}, BYTES);
+    assert.equal(v.status, 'HOLD');
+  });
 });
 
 describe('judge — Verdict shape', () => {
@@ -143,6 +191,46 @@ describe('Property P2: every finding has checkId, measured, threshold fields', (
             assert.ok('measured' in f);
             assert.ok('threshold' in f);
           }
+        }
+      )
+    );
+  });
+});
+
+describe('Property P8: NaN or Infinity measured always returns HOLD', () => {
+  it('P8', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.constantFrom(NaN, Infinity, -Infinity),
+        fc.uint8Array({ minLength: 1, maxLength: 32 }),
+        async (badMeasured, bytes) => {
+          const check = (_ev) => ({
+            checkId: 'c', measured: badMeasured, threshold: 1, unit: null, passed: true,
+          });
+          check.checkId = 'c';
+          const gate = { id: 'g', version: '1', checks: [check] };
+          const v = await judge(gate, {}, bytes);
+          assert.equal(v.status, 'HOLD');
+        }
+      )
+    );
+  });
+});
+
+describe('Property P9: non-boolean passed always returns HOLD', () => {
+  it('P9', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.oneof(fc.string(), fc.integer(), fc.constant(null), fc.constant(undefined)),
+        fc.uint8Array({ minLength: 1, maxLength: 32 }),
+        async (badPassed, bytes) => {
+          const check = (_ev) => ({
+            checkId: 'c', measured: 1, threshold: 1, unit: null, passed: badPassed,
+          });
+          check.checkId = 'c';
+          const gate = { id: 'g', version: '1', checks: [check] };
+          const v = await judge(gate, {}, bytes);
+          assert.equal(v.status, 'HOLD');
         }
       )
     );
