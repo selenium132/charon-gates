@@ -4,3 +4,4 @@
  */
 
 export { artifactHash, gateHash } from './hash.js';
+export { judge } from './judge.js';

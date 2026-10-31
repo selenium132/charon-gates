@@ -33,9 +33,9 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 3 — Implement `core/judge.js`
 
-- [ ] Implement `judge(gateDef, evidence, artifactBytes): Promise<Verdict>` following the design (§3.2): run all checks, collect findings, compute status with HOLD dominance.
-- [ ] Export from `core/index.js`.
-- [ ] Write unit tests in `skeleton/core/judge.test.js`:
+- [x] Implement `judge(gateDef, evidence, artifactBytes): Promise<Verdict>` following the design (§3.2): run all checks, collect findings, compute status with HOLD dominance.
+- [x] Export from `core/index.js`.
+- [x] Write unit tests in `skeleton/core/judge.test.js`:
   - Unit: all-passing checks → PASS.
   - Unit: one failing check → FAIL.
   - Unit: null evidence → HOLD.
