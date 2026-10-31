@@ -7,9 +7,10 @@
 
 import { judge, artifactHash } from '../../skeleton/core/index.js';
 import { GATE_DEF, profile } from './gate.js';
-import { extractEvidence, makeCursedEvidence, makeCleanEvidence } from './reader.js';
+import { extractEvidence, makeCursedEvidence, makeCleanEvidence, makeNoAudioEvidence } from './reader.js';
+import { renderContactSheet } from './sheet.js';
 import { createLocalStorageLedger } from '../../skeleton/web/localStorage-ledger.js';
-import { renderVerdict, renderContactSheet } from '../../skeleton/web/verdict-renderer.js';
+import { renderVerdict } from '../../skeleton/web/verdict-renderer.js';
 
 const LEDGER_KEY = 'charon:ghost-viewer:ledger';
 const ledger = createLocalStorageLedger(LEDGER_KEY);
@@ -60,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cursedBtn.addEventListener('click', () => runSynthetic('cursed'));
   cleanBtn.addEventListener('click', () => runSynthetic('clean'));
+  document.getElementById('btn-nosound').addEventListener('click', () => runSynthetic('no sound track'));
   downloadBtn.addEventListener('click', downloadLedger);
 });
 
@@ -87,13 +89,13 @@ async function runFile(file) {
 }
 
 /**
- * @param {'cursed'|'clean'} kind
+ * @param {'cursed'|'clean'|'no sound track'} kind
  */
 async function runSynthetic(kind) {
   setStatus(`Synthesising ${kind} sample…`);
   setBusy(true);
   try {
-    const evidence = kind === 'cursed' ? makeCursedEvidence() : makeCleanEvidence();
+    const evidence = kind === 'cursed' ? makeCursedEvidence() : kind === 'clean' ? makeCleanEvidence() : makeNoAudioEvidence();
     // Synthetic artifact bytes: encode the kind label
     const fileBytes = new TextEncoder().encode(`synthetic:${kind}`);
     await runGate(evidence, fileBytes, `[synthetic: ${kind}]`);
@@ -129,7 +131,7 @@ async function runGate(evidence, artifactBytes, label) {
     heading.textContent = 'Sampled frames';
     heading.style.cssText = 'font-size:0.9rem;font-weight:600;color:#7a7068;margin:1.5rem 0 0.5rem;';
     contactArea.appendChild(heading);
-    contactArea.appendChild(renderContactSheet(evidence.frames, verdict.findings, profile));
+    contactArea.appendChild(renderContactSheet(evidence, verdict.findings, profile));
   }
 
   // Append to ledger and show verify result
@@ -182,5 +184,6 @@ function setStatus(msg) {
 function setBusy(busy) {
   cursedBtn.disabled = busy;
   cleanBtn.disabled = busy;
+  document.getElementById('btn-nosound').disabled = busy;
   dropZone.setAttribute('aria-busy', String(busy));
 }

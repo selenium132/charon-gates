@@ -9,6 +9,8 @@
  */
 
 import { readFile, appendFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { judge, createLedger, buildOverrideEntry } from '../core/index.js';
@@ -73,7 +75,7 @@ switch (subCommand) {
       die(`I/O error reading artifact: ${err.message}`, 2);
     }
     try {
-      const mod = await import(new URL(gatePath, import.meta.url + '/../').href);
+      const mod = await import(pathToFileURL(resolve(process.cwd(), gatePath)).href);
       gateDef = mod.default;
     } catch (err) {
       die(`I/O error importing gate: ${err.message}`, 2);
@@ -82,7 +84,7 @@ switch (subCommand) {
     // Evidence reader: use named export `readEvidence` if present, else {}
     let evidence = {};
     try {
-      const mod = await import(new URL(gatePath, import.meta.url + '/../').href);
+      const mod = await import(pathToFileURL(resolve(process.cwd(), gatePath)).href);
       if (typeof mod.readEvidence === 'function') {
         evidence = await mod.readEvidence(artifactPath);
       }

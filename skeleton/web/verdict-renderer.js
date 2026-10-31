@@ -44,7 +44,7 @@ export function renderVerdict(verdict, filename) {
   wrap.appendChild(badge);
 
   // Hash info
-  const meta = el('div', { style: `font-size:0.7rem;font-family:monospace;color:${COLOURS.dim};margin-bottom:1.2rem;line-height:1.6;` });
+  const meta = el('div', { style: `overflow-wrap:anywhere;font-size:0.7rem;font-family:monospace;color:${COLOURS.dim};margin-bottom:1.2rem;line-height:1.6;` });
   meta.innerHTML =
     `artifact&nbsp;sha256: ${verdict.artifactHash}<br>` +
     `gate&nbsp;&nbsp;&nbsp;&nbsp;sha256: ${verdict.gateHash}<br>` +
@@ -86,95 +86,11 @@ export function renderVerdict(verdict, filename) {
     tbody.appendChild(row);
   });
   table.appendChild(tbody);
-  wrap.appendChild(table);
+  const scroller = el('div', { style: 'overflow-x:auto;-webkit-overflow-scrolling:touch;' });
+  scroller.appendChild(table);
+  wrap.appendChild(scroller);
 
   return wrap;
-}
-
-/**
- * Renders a contact sheet of sampled frames with UI bands drawn over them.
- * Frames that contributed to a failing band-intrusion or black-frames finding
- * are marked with a red border.
- *
- * @param {Array<{ time: number, data: Uint8ClampedArray }>} frames
- * @param {Finding[]} findings
- * @param {{ frameW: number, frameH: number, bands: { topPct: number, bottomPct: number, rightPct: number } }} profile
- * @returns {HTMLElement}
- */
-export function renderContactSheet(frames, findings, profile) {
-  const { frameW: W, frameH: H, bands } = profile;
-  const topH = Math.round(H * bands.topPct / 100);
-  const botH = Math.round(H * bands.bottomPct / 100);
-  const rightW = Math.round(W * bands.rightPct / 100);
-
-  const blackFramesFinding = findings.find((f) => f.checkId === 'black-frames');
-  const bandFinding = findings.find((f) => f.checkId === 'ui-band-intrusion');
-  const bothFail = (blackFramesFinding && !blackFramesFinding.passed) ||
-                   (bandFinding && !bandFinding.passed);
-
-  const grid = el('div', {
-    style: 'display:grid;grid-template-columns:repeat(auto-fill,135px);gap:4px;margin-top:1rem;',
-    role: 'list',
-    'aria-label': 'Sampled frames',
-  });
-
-  frames.forEach((f, idx) => {
-    const wrapper = el('div', {
-      style: 'position:relative;',
-      role: 'listitem',
-      'aria-label': `Frame at ${f.time.toFixed(2)}s`,
-    });
-
-    const canvas = /** @type {HTMLCanvasElement} */ (el('canvas'));
-    canvas.width = W;
-    canvas.height = H;
-    canvas.style.display = 'block';
-
-    const ctx = canvas.getContext('2d');
-    const img = ctx.createImageData(W, H);
-    // Grayscale → RGBA
-    for (let i = 0; i < f.data.length; i++) {
-      const v = f.data[i];
-      img.data[i * 4] = v;
-      img.data[i * 4 + 1] = v;
-      img.data[i * 4 + 2] = v;
-      img.data[i * 4 + 3] = 255;
-    }
-    ctx.putImageData(img, 0, 0);
-
-    // Draw band overlays
-    ctx.save();
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = '#aa44ff';
-    // Top band
-    ctx.fillRect(0, 0, W - rightW, topH);
-    // Bottom band
-    ctx.fillRect(0, H - botH, W - rightW, botH);
-    // Right rail
-    ctx.fillRect(W - rightW, 0, rightW, H);
-    ctx.restore();
-
-    // Timestamp label
-    ctx.save();
-    ctx.font = '10px monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.fillText(`${f.time.toFixed(2)}s`, 3, H - 4);
-    ctx.restore();
-
-    // Red border for failing frame (heuristic: mark if both findings fail)
-    if (bothFail) {
-      canvas.style.outline = '2px solid #cc2222';
-    }
-
-    wrapper.appendChild(canvas);
-    grid.appendChild(wrapper);
-  });
-
-  if (frames.length === 0) {
-    grid.appendChild(el('p', { textContent: 'No frames sampled.', style: `color:${COLOURS.dim};` }));
-  }
-
-  return grid;
 }
 
 // ---------------------------------------------------------------------------

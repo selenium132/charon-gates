@@ -137,3 +137,15 @@ describe('unknown sub-command', () => {
     assert.ok(stderr.length > 0);
   });
 });
+
+it('judge resolves the gate path from the working directory', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { fileURLToPath } = await import('node:url');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = fileURLToPath(new URL('../../', import.meta.url));
+  const ledger = join(mkdtempSync(join(tmpdir(), 'charon-')), 'l.jsonl');
+  const r = spawnSync('node', ['skeleton/cli/charon.js', 'judge', 'skeleton/cli/fixtures/artifact.bin', 'skeleton/cli/fixtures/pass.gate.js', '--ledger', ledger], { cwd: root, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+});

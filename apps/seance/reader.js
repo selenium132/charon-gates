@@ -121,9 +121,17 @@ export function makeGhostEvidence() {
   const candidateMean = pairs.reduce((a, r) => a + r.candidate, 0) / pairs.length;
   const ev = /** @type {SeanceEvidence} */ ({
     pairs,
-    submissions: [],
+    // The earlier public scores do not follow the local ones.
+    submissions: [
+      { hash: 'sub001', local: 0.812, public: 0.871 },
+      { hash: 'sub002', local: 0.806, public: 0.802 },
+      { hash: 'sub003', local: 0.819, public: 0.795 },
+      { hash: 'sub004', local: 0.801, public: 0.866 },
+      { hash: 'sub005', local: 0.815, public: 0.808 },
+    ],
     fileHash: null,
     candidateMean,
+    publicBest: 0.902,
     todayCount: 0,
   });
   return {
@@ -167,6 +175,7 @@ export function makeRealEvidence() {
     submissions,
     fileHash: null,
     candidateMean,
+    publicBest: 0.884,
     todayCount: 1,
   });
   return {

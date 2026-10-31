@@ -273,7 +273,7 @@ function makePublicLocalRankCheck(p) {
       // Skip: pass with note
       return {
         checkId: 'public-local-rank',
-        measured: null,
+        measured: 'skipped',
         threshold: p.minRank,
         unit: 'rho',
         passed: true,
@@ -303,19 +303,21 @@ function makePublicLocalRankCheck(p) {
 function makeLevelGapCheck(p) {
   /** @param {SeanceEvidence} ev */
   function check(ev) {
-    if (p.publicBest == null) {
+    // The level moves every day, so it is evidence, not gate definition. Unknown level: HOLD.
+    const publicBest = ev.publicBest ?? p.publicBest;
+    if (publicBest == null || !Number.isFinite(publicBest)) {
       return {
         checkId: 'level-gap',
         measured: null,
         threshold: -p.maxGapPct,
         unit: '%',
-        passed: true,
-        note: 'publicBest not set — skipped',
+        passed: false,
+        note: 'best public score not supplied',
       };
     }
-    const gapPct = p.publicBest === 0
+    const gapPct = publicBest === 0
       ? 0
-      : ((ev.candidateMean - p.publicBest) / Math.abs(p.publicBest)) * 100;
+      : ((ev.candidateMean - publicBest) / Math.abs(publicBest)) * 100;
     return {
       checkId: 'level-gap',
       measured: +gapPct.toFixed(2),

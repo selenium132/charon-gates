@@ -22,6 +22,12 @@ import {
   makeOpeningMotionCheck,
 } from './gate.js';
 
+import {
+  makeCursedEvidence,
+  makeCleanEvidence,
+  makeNoAudioEvidence,
+} from './reader.js';
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -283,6 +289,30 @@ describe('ui-band-intrusion', () => {
     assert.equal(check(baseEvidence(frames)).passed, true);
   });
 
+  it('regression: busy centre does not hide text-like edge in top band', () => {
+    // Construct a frame where the centre has a rich sine texture (many edges)
+    // but also has a hard bright/dark stripe in the top band.
+    // The old ratio-based check returned 0 because centre density was high.
+    // The new absolute check must detect the band as occupied.
+    const topH = Math.round(H * profile.bands.topPct / 100);
+    const data = new Uint8ClampedArray(N);
+    // Busy centre: sine-wave texture
+    for (let y = topH; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        data[y * W + x] = Math.round(128 + 80 * Math.sin(x / 3) * Math.cos(y / 3));
+      }
+    }
+    // Text-like hard edge stripe inside the top band (row topH-2 bright, topH-1 dark)
+    const edgeRow = Math.max(1, topH - 2);
+    for (let x = 0; x < W; x++) {
+      data[edgeRow * W + x] = 240;
+      data[(edgeRow + 1) * W + x] = 10;
+    }
+    const frames = [{ time: 0, data }];
+    const result = check(baseEvidence(frames));
+    assert.equal(result.passed, false, `expected FAIL, measured=${result.measured}`);
+  });
+
   it('property: adding bright edges inside band never lowers intrusion score', () => {
     fc.assert(fc.property(
       fc.integer({ min: 1, max: 5 }),
@@ -374,6 +404,59 @@ describe('opening-motion', () => {
       { time: 2, data: solidFrame(200) },
     ];
     assert.equal(check(baseEvidence(frames)).passed, false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// cursed / no-audio synthetic samples (F3)
+// ---------------------------------------------------------------------------
+
+describe('cursed sample', () => {
+  it('FAIL with at least four failing checks', async () => {
+    const { judge } = await import('../../skeleton/core/index.js');
+    const evidence = makeCursedEvidence();
+    const bytes = new TextEncoder().encode('synthetic:cursed');
+    const verdict = await judge(GATE_DEF, evidence, bytes);
+    assert.equal(verdict.status, 'FAIL', `expected FAIL, got ${verdict.status}`);
+    const failing = verdict.findings.filter((f) => !f.passed);
+    assert.ok(failing.length >= 4, `expected >=4 failing checks, got ${failing.length}: ${failing.map(f=>f.checkId).join(', ')}`);
+  });
+
+  it('contact sheet has at least one frame', () => {
+    const evidence = makeCursedEvidence();
+    assert.ok(evidence.frames.length > 0, 'cursed evidence must have frames');
+  });
+});
+
+describe('no-audio sample (F3)', () => {
+  it('shows HOLD (null audioRms)', async () => {
+    const { judge } = await import('../../skeleton/core/index.js');
+    const evidence = makeNoAudioEvidence();
+    // Null audio causes silence-run to return measured:null → HOLD
+    const bytes = new TextEncoder().encode('synthetic:no-audio');
+    const verdict = await judge(GATE_DEF, evidence, bytes);
+    assert.equal(verdict.status, 'HOLD', `expected HOLD, got ${verdict.status}`);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// makeCleanEvidence determinism (F4)
+// ---------------------------------------------------------------------------
+
+describe('makeCleanEvidence determinism (F4)', () => {
+  it('two calls return identical audioRms arrays', () => {
+    const a = makeCleanEvidence();
+    const b = makeCleanEvidence();
+    assert.deepEqual(a.audioRms, b.audioRms, 'audioRms must be identical across calls');
+  });
+
+  it('two calls return identical frame data', () => {
+    const a = makeCleanEvidence();
+    const b = makeCleanEvidence();
+    assert.equal(a.frames.length, b.frames.length);
+    for (let i = 0; i < a.frames.length; i++) {
+      assert.deepEqual(a.frames[i].data, b.frames[i].data, `frame ${i} must be identical`);
+    }
   });
 });
 

@@ -97,7 +97,9 @@ async function runFromInputs() {
     const todayCount = await countTodaySubmissions();
 
     /** @type {import('./gate.js').SeanceEvidence} */
-    const ev = { pairs, submissions, fileHash, candidateMean, todayCount };
+    const rawBest = document.getElementById('public-best').value.trim();
+    const publicBest = rawBest === '' ? null : Number(rawBest);
+    const ev = { pairs, submissions, fileHash, candidateMean, publicBest, todayCount };
 
     const label = file ? file.name : '[pasted evidence]';
     await runGate(ev, artifactBytes, label);
@@ -273,14 +275,8 @@ function renderBootstrapChart(sortedMeans, resamples) {
     ? `<line x1="${lowerX.toFixed(2)}%" y1="0" x2="${lowerX.toFixed(2)}%" y2="${SVG_H}" stroke="#c8922a" stroke-width="2" />`
     : '';
 
-  // Labels
-  const zeroLabel = (zeroX >= 2 && zeroX <= 95)
-    ? `<text x="${zeroX.toFixed(2)}%" y="${(SVG_H + LABEL_H - 2)}" font-size="10" fill="#e8e0d0" text-anchor="middle" font-family="system-ui,sans-serif">0</text>`
-    : '';
-
-  const lowerLabel = (lowerX >= 2 && lowerX <= 98 && Math.abs(lowerX - zeroX) > 4)
-    ? `<text x="${lowerX.toFixed(2)}%" y="${(SVG_H + LABEL_H - 2)}" font-size="10" fill="#c8922a" text-anchor="middle" font-family="system-ui,sans-serif">2.5%</text>`
-    : '';
+  const zeroLabel = '';
+  const lowerLabel = '';
 
   const svgHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="${TOTAL_H}" viewBox="0 0 100 ${TOTAL_H}" preserveAspectRatio="none" role="img" aria-label="Bootstrap distribution of mean paired difference">${bars}${zeroLine}${lowerLine}${zeroLabel}${lowerLabel}</svg>`;
 

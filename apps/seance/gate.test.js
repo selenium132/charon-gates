@@ -202,9 +202,9 @@ describe('public-local-rank', () => {
     assert.equal(f.passed, true);
   });
 
-  it('skips (passes with null) when < 4 subs and requireRank false', () => {
+  it('skips (passes, measured "skipped") when < 4 subs and requireRank false', () => {
     const f = check(evidence([], { submissions: goodSubs.slice(0, 2) }));
-    assert.equal(f.measured, null);
+    assert.equal(f.measured, 'skipped');
     assert.equal(f.passed, true);
   });
 
@@ -233,11 +233,11 @@ describe('public-local-rank', () => {
 // ---------------------------------------------------------------------------
 
 describe('level-gap', () => {
-  it('skips (passes with null) when publicBest not set', () => {
+  it('is HOLD evidence (measured null) when the level is unknown', () => {
     const check = makeLevelGapCheck(defaults); // publicBest: null
-    const f = check(evidence(makePairs(5, 0.1)));
-    assert.equal(f.measured, null);
-    assert.equal(f.passed, true);
+    const r = check({ pairs: [], submissions: [], fileHash: null, candidateMean: 0.9, todayCount: 0 });
+    assert.equal(r.measured, null);
+    assert.equal(r.passed, false);
   });
 
   it('passes when candidateMean is close to publicBest', () => {
@@ -414,5 +414,17 @@ describe('property: scale invariance of z', () => {
         },
       ),
     );
+  });
+});
+
+describe('samples through judge()', () => {
+  it('The ghost is FAIL and The real thing is PASS', async () => {
+    const { judge } = await import('../../skeleton/core/index.js');
+    const { GATE_DEF } = await import('./gate.js');
+    const { makeGhostEvidence, makeRealEvidence } = await import('./reader.js');
+    const ghost = makeGhostEvidence();
+    const real = makeRealEvidence();
+    assert.equal((await judge(GATE_DEF, ghost.evidence, ghost.artifactBytes)).status, 'FAIL');
+    assert.equal((await judge(GATE_DEF, real.evidence, real.artifactBytes)).status, 'PASS');
   });
 });

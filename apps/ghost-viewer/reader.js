@@ -162,63 +162,95 @@ const W = FRAME_W;
 const H = FRAME_H;
 const N = W * H;
 
-/**
- * Synthesises evidence for a "cursed" video that should fail multiple checks.
- * - All black frames → fails black-frames
- * - Constant frames → fails frozen-run
- * - Null audio → HOLD on silence-run
- * @returns {import('./gate.js').VideoEvidence}
- */
-export function makeCursedEvidence() {
-  const frames = Array.from({ length: 14 }, (_, i) => ({
-    time: i * 0.5,
-    data: new Uint8ClampedArray(N), // all zeros = black
-  }));
-  return {
-    width: 1080,
-    height: 1920,
-    durationSec: 7,
-    frames,
-    audioRms: null,
+/** Small seeded generator, so that a sample gives the same evidence on every click. */
+function seeded(seed) {
+  let x = seed >>> 0;
+  return () => {
+    x = (x + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(x ^ (x >>> 15), 1 | x);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
 
+/** Draws rows of text-like blocks into a frame. */
+function textBlock(data, x0, y0, width, rows, fg, rnd) {
+  for (let r = 0; r < rows; r++) {
+    const y = y0 + r * 6;
+    let x = x0;
+    while (x < x0 + width) {
+      const glyph = 2 + Math.floor(rnd() * 4);
+      for (let dy = 0; dy < 4; dy++) {
+        for (let dx = 0; dx < glyph && x + dx < x0 + width; dx++) {
+          const i = (y + dy) * W + x + dx;
+          if (i >= 0 && i < N) data[i] = fg;
+        }
+      }
+      x += glyph + 2;
+    }
+  }
+}
+
+/** A frame of a broken short: headline and caption under the UI, content pushed left. */
+function brokenFrame(step) {
+  const rnd = seeded(1000 + step);
+  const data = new Uint8ClampedArray(N).fill(34);
+  textBlock(data, 4, 3, 74, 2, 235, seeded(7));
+  textBlock(data, 4, H - 34, 74, 4, 235, seeded(9));
+  for (let y = 70; y < 170; y++) for (let x = 2; x < 52; x++) data[y * W + x] = 150;
+  textBlock(data, 5, 80 + (step % 5) * 6, 44, 6, 20, rnd);
+  return data;
+}
+
 /**
- * Synthesises evidence for a "clean" video that should pass all checks.
- * - 9:16, 1080×1920, 10 s
- * - Frames with motion (alternating values)
- * - RMS above silence threshold
+ * A believable broken short: text in the UI bands, content left of centre, a static
+ * opening, a frozen stretch of 5 s, and a 4 s silent gap in the audio.
+ * @returns {import('./gate.js').VideoEvidence}
+ */
+export function makeCursedEvidence() {
+  const stills = new Set([0, 1, 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]);
+  let last = brokenFrame(0);
+  const frames = Array.from({ length: 28 }, (_, i) => {
+    if (!stills.has(i)) last = brokenFrame(i);
+    return { time: i * 0.5, data: last };
+  });
+  const audioRms = Array.from({ length: 28 }, (_, i) => (i >= 14 && i < 22 ? 0 : 0.08));
+  return { width: 1080, height: 1920, durationSec: 14, frames, audioRms };
+}
+
+/**
+ * A clean short with no sound track. Unreadable evidence is HOLD, never PASS (rule 1).
+ * @returns {import('./gate.js').VideoEvidence}
+ */
+export function makeNoAudioEvidence() {
+  const clean = makeCleanEvidence();
+  return { ...clean, audioRms: null };
+}
+
+/**
+ * A short that should pass every check: content inside the safe area, centred, moving, with sound.
  * @returns {import('./gate.js').VideoEvidence}
  */
 export function makeCleanEvidence() {
+  const rnd = seeded(42);
+  const topH = Math.round(H * profile.bands.topPct / 100);
+  const botH = Math.round(H * profile.bands.bottomPct / 100);
+  const rightW = Math.round(W * profile.bands.rightPct / 100);
   const frames = Array.from({ length: 20 }, (_, i) => {
-    const data = new Uint8ClampedArray(N);
-    // Vary brightness per frame so frozen-run and opening-motion checks pass
-    const base = 80 + (i % 2 === 0 ? 40 : -40);
-    // Avoid edges in the UI bands to keep band-intrusion low
-    const topH = Math.round(H * profile.bands.topPct / 100);
-    const botH = Math.round(H * profile.bands.bottomPct / 100);
-    const rightW = Math.round(W * profile.bands.rightPct / 100);
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        // Uniform inside bands, varied texture in central area
-        const inBand = y < topH || y >= H - botH || x >= W - rightW;
-        if (inBand) {
-          data[y * W + x] = 90; // smooth in bands
-        } else {
-          // Gentle sine-wave texture — creates edges but centred
-          data[y * W + x] = Math.round(base + 30 * Math.sin((x - W / 2) / 20) * Math.cos(y / 30));
-        }
-      }
-    }
+    const data = new Uint8ClampedArray(N).fill(38);
+    // A centred card, kept clear of all three bands and symmetric about the centre.
+    const margin = rightW + 3;
+    const cardTop = topH + 18;
+    const cardBottom = H - botH - 18;
+    for (let y = cardTop; y < cardBottom; y++) for (let x = margin; x < W - margin; x++) data[y * W + x] = 150 + (i % 4) * 12;
+    textBlock(data, margin + 6, cardTop + 12 + (i % 6) * 6, W - 2 * margin - 12, 8, 24, seeded(100 + i));
     return { time: i * 0.5, data };
   });
-
   return {
     width: 1080,
     height: 1920,
     durationSec: 10,
     frames,
-    audioRms: Array.from({ length: 20 }, () => 0.05 + Math.random() * 0.1),
+    audioRms: Array.from({ length: 20 }, () => 0.05 + rnd() * 0.1),
   };
 }

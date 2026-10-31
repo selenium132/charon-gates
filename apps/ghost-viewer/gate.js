@@ -29,7 +29,8 @@ export const profile = {
     bottomPct: 20,
     rightPct: 12,
   },
-  bandIntrusionRatio: 1.5,
+  bandEdgeMag: 80,
+  bandMinEdgeShare: 0.04,
   bandIntrusionMaxShare: 0.10,
   offCentreMaxPct: 12,
   openingMotionMinDiff: 1.0,
@@ -310,33 +311,9 @@ function makeUiBandIntrusionCheck(p) {
     if (!ev.frames || ev.frames.length === 0) {
       return { checkId: 'ui-band-intrusion', measured: null, threshold: p.bandIntrusionMaxShare, unit: 'share', passed: false };
     }
-    const w = p.frameW;
-    const h = p.frameH;
-    const topH = Math.round(h * topPct / 100);
-    const botH = Math.round(h * bottomPct / 100);
-    const rightW = Math.round(w * rightPct / 100);
-    // Central area: exclude the bands
-    const cx0 = 0;
-    const cx1 = w - rightW;
-    const cy0 = topH;
-    const cy1 = h - botH;
-
-    let intrudingFrames = 0;
-    for (const f of ev.frames) {
-      const mag = sobelMag(f.data, w, h);
-      const centralDensity = meanRegion(mag, w, cx0, cy0, cx1, cy1);
-      // Top band density
-      const topDensity = meanRegion(mag, w, 0, 0, w - rightW, topH);
-      // Bottom band density
-      const botDensity = meanRegion(mag, w, 0, h - botH, w - rightW, h);
-      // Right rail density
-      const rightDensity = meanRegion(mag, w, w - rightW, 0, w, h);
-      const threshold = p.bandIntrusionRatio * centralDensity;
-      if (topDensity > threshold || botDensity > threshold || rightDensity > threshold) {
-        intrudingFrames++;
-      }
-    }
-    const share = intrudingFrames / ev.frames.length;
+    let occupied = 0;
+    for (const f of ev.frames) if (occupiedBands(f.data, p).length > 0) occupied++;
+    const share = occupied / ev.frames.length;
     return {
       checkId: 'ui-band-intrusion',
       measured: +share.toFixed(4),
@@ -346,8 +323,66 @@ function makeUiBandIntrusionCheck(p) {
     };
   }
   check.checkId = 'ui-band-intrusion';
-  check.params = { topPct, bottomPct, rightPct, ratio: p.bandIntrusionRatio, maxShare: p.bandIntrusionMaxShare };
+  check.params = { topPct, bottomPct, rightPct, edgeMag: p.bandEdgeMag, minEdgeShare: p.bandMinEdgeShare, maxShare: p.bandIntrusionMaxShare };
   return check;
+}
+
+/**
+ * Names the UI bands that hold detail in one frame. A band is occupied when at
+ * least bandMinEdgeShare of its pixels have Sobel magnitude above bandEdgeMag.
+ * An absolute measure: a busy centre cannot hide text sitting under the UI.
+ * @param {Uint8ClampedArray} data
+ * @param {typeof profile} p
+ * @returns {string[]}
+ */
+export function occupiedBands(data, p = profile) {
+  const w = p.frameW;
+  const h = p.frameH;
+  const topH = Math.round(h * p.bands.topPct / 100);
+  const botH = Math.round(h * p.bands.bottomPct / 100);
+  const rightW = Math.round(w * p.bands.rightPct / 100);
+  const mag = sobelMag(data, w, h);
+  const share = (x0, y0, x1, y1) => {
+    let hits = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if (mag[y * w + x] > p.bandEdgeMag) hits++;
+    return hits / Math.max(1, (x1 - x0) * (y1 - y0));
+  };
+  const out = [];
+  if (share(0, 0, w - rightW, topH) >= p.bandMinEdgeShare) out.push('top');
+  if (share(0, h - botH, w - rightW, h) >= p.bandMinEdgeShare) out.push('bottom');
+  if (share(w - rightW, 0, w, h) >= p.bandMinEdgeShare) out.push('right');
+  return out;
+}
+
+/**
+ * For each frame, the reasons a failing check implicates it.
+ * @param {VideoEvidence} ev
+ * @param {{checkId:string,passed:boolean}[]} findings
+ * @param {typeof profile} p
+ * @returns {string[][]}
+ */
+export function implicatedFrames(ev, findings, p = profile) {
+  const failed = new Set(findings.filter((f) => f.passed === false).map((f) => f.checkId));
+  const stepSec = ev.frames.length > 1 ? ev.frames[1].time - ev.frames[0].time : 0.5;
+  const minRun = Math.floor(p.frozenMaxRunSec / stepSec);
+  const frozen = new Array(ev.frames.length).fill(false);
+  if (failed.has('frozen-run')) {
+    let start = 0;
+    for (let i = 1; i <= ev.frames.length; i++) {
+      const same = i < ev.frames.length && meanAbsDiff(ev.frames[i - 1].data, ev.frames[i].data) < p.frozenDiffThreshold;
+      if (!same) {
+        if (i - start > minRun) for (let j = start; j < i; j++) frozen[j] = true;
+        start = i;
+      }
+    }
+  }
+  return ev.frames.map((f, i) => {
+    const why = [];
+    if (failed.has('black-frames') && meanLuma(f.data) < p.blackFrameLumaThreshold) why.push('black');
+    if (frozen[i]) why.push('frozen');
+    if (failed.has('ui-band-intrusion')) for (const b of occupiedBands(f.data, p)) why.push(`${b} band`);
+    return why;
+  });
 }
 
 /**
