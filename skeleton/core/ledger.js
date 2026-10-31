@@ -42,10 +42,24 @@ export function createLedger(readLines, appendLine) {
 
   /**
    * Replays all ledger lines and verifies the hash chain.
+   * Also checks that line 0's prevHash is exactly 'GENESIS'.
    * @returns {Promise<{ok: boolean, firstBadIndex: number|null}>}
    */
   async function verify() {
     const lines = await readLines();
+    if (lines.length === 0) return { ok: true, firstBadIndex: null };
+
+    // Check line 0 independently: must parse and have prevHash === 'GENESIS'.
+    let first;
+    try {
+      first = JSON.parse(lines[0]);
+    } catch {
+      return { ok: false, firstBadIndex: 0 };
+    }
+    if (first.prevHash !== 'GENESIS') {
+      return { ok: false, firstBadIndex: 0 };
+    }
+
     for (let i = 1; i < lines.length; i++) {
       const expected = await sha256ofLine(lines[i - 1]);
       let parsed;
@@ -62,13 +76,17 @@ export function createLedger(readLines, appendLine) {
   }
 
   /**
-   * Returns the last `n` entries as parsed objects.
+   * Returns the last `n` entries as parsed objects. Skips unparseable lines.
    * @param {number} [n=10]
    * @returns {Promise<LedgerEntry[]>}
    */
   async function tail(n = 10) {
     const lines = await readLines();
-    return lines.slice(-n).map((l) => JSON.parse(l));
+    const results = [];
+    for (const l of lines.slice(-n)) {
+      try { results.push(JSON.parse(l)); } catch { /* skip corrupt line */ }
+    }
+    return results;
   }
 
   return { append, verify, tail };

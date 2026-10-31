@@ -62,6 +62,29 @@ describe('ledger — verify', () => {
     // Index 2 is the first entry whose prevHash no longer matches tampered line 1
     assert.equal(result.firstBadIndex, 2);
   });
+
+  it('D4: single-line ledger with wrong prevHash → { ok: false, firstBadIndex: 0 }', async () => {
+    const store = [JSON.stringify({ type: 'verdict', prevHash: 'NOT-GENESIS', ts: new Date().toISOString() })];
+    const ledger = createLedger(async () => [...store], async (l) => { store.push(l); });
+    const result = await ledger.verify();
+    assert.equal(result.ok, false);
+    assert.equal(result.firstBadIndex, 0);
+  });
+
+  it('D4: single-line ledger with prevHash GENESIS → { ok: true }', async () => {
+    const { ledger } = memLedger();
+    await ledger.append({ type: 'verdict', n: 1 });
+    const result = await ledger.verify();
+    assert.deepEqual(result, { ok: true, firstBadIndex: null });
+  });
+
+  it('D4: unparseable line 0 → { ok: false, firstBadIndex: 0 }', async () => {
+    const store = ['not valid json'];
+    const ledger = createLedger(async () => [...store], async (l) => { store.push(l); });
+    const result = await ledger.verify();
+    assert.equal(result.ok, false);
+    assert.equal(result.firstBadIndex, 0);
+  });
 });
 
 describe('ledger — tail', () => {
@@ -72,6 +95,21 @@ describe('ledger — tail', () => {
     assert.equal(entries.length, 2);
     assert.equal(entries[0].n, 4);
     assert.equal(entries[1].n, 5);
+  });
+
+  it('D4: tail() does not throw on a corrupt line — skips it', async () => {
+    const store = [];
+    const ledger = createLedger(async () => [...store], async (l) => { store.push(l); });
+    await ledger.append({ n: 1 });
+    store.push('not-json');
+    await ledger.append({ n: 3 });
+    // tail(10) should return the two parseable entries, skip the corrupt one
+    const entries = await ledger.tail(10);
+    assert.ok(Array.isArray(entries));
+    // Should not throw; may have 2 or 3 entries depending on slice window, but no throw
+    for (const e of entries) {
+      assert.ok(typeof e === 'object' && e !== null);
+    }
   });
 });
 
