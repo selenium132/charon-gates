@@ -135,10 +135,10 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 9 — Integration smoke test and line-count check
 
-- [ ] Run the full test suite from `skeleton/`: `node --test skeleton/**/*.test.js`.
-- [ ] Count non-test, non-blank source lines across `skeleton/` (core + cli + mcp + hooks). Confirm the count does not exceed 600.
-- [ ] If over budget, trim and document the reason before proceeding.
-- [ ] Create `skeleton/README.md` with:
+- [x] Run the full test suite from `skeleton/`: `node --test skeleton/**/*.test.js`.
+- [x] Count non-test, non-blank source lines across `skeleton/` (core + cli + mcp + hooks). Confirm the count does not exceed 600.
+- [x] If over budget, trim and document the reason before proceeding.
+- [x] Create `skeleton/README.md` with:
   - One-paragraph description of what Charon is.
   - Quick-start for using the skeleton to build a new gate.
   - The five Toll rules (verbatim from product steering).
