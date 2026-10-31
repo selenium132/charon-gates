@@ -52,9 +52,9 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 4 — Implement `core/ledger.js`
 
-- [ ] Implement `createLedger(readLines, appendLine)` returning `{ append, verify, tail }` following the design (§3.3).
-- [ ] Export from `core/index.js`.
-- [ ] Write unit tests in `skeleton/core/ledger.test.js`:
+- [x] Implement `createLedger(readLines, appendLine)` returning `{ append, verify, tail }` following the design (§3.3).
+- [x] Export from `core/index.js`.
+- [x] Write unit tests in `skeleton/core/ledger.test.js`:
   - Unit: first entry has `prevHash === 'GENESIS'`.
   - Unit: second entry's `prevHash` equals SHA-256 hex of the first raw line.
   - Unit: `verify()` on an untampered ledger returns `{ ok: true, firstBadIndex: null }`.
