@@ -1,5 +1,6 @@
 {
   "ledgerPath": ".charon/ledger.jsonl",
   "artifactPath": "dist/output.mp4",
+  "gatePath": "gates/video.gate.js",
   "releasePattern": "release"
 }
