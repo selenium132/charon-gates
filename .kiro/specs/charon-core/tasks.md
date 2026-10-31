@@ -85,11 +85,11 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 6 — Implement `cli/charon.js`
 
-- [ ] Create `skeleton/cli/charon.js` as an ESM bin script with `#!/usr/bin/env node`.
-- [ ] Implement `judge`, `verify-ledger`, and `override` sub-commands following the design (§3.5).
-- [ ] Wire up Node `fs/promises` callbacks to `createLedger` for `--ledger` usage.
-- [ ] Add `"bin": { "charon": "./cli/charon.js" }` to `skeleton/package.json`.
-- [ ] Write integration tests in `skeleton/cli/cli.test.js` using `node:child_process` `spawn`:
+- [x] Create `skeleton/cli/charon.js` as an ESM bin script with `#!/usr/bin/env node`.
+- [x] Implement `judge`, `verify-ledger`, and `override` sub-commands following the design (§3.5).
+- [x] Wire up Node `fs/promises` callbacks to `createLedger` for `--ledger` usage.
+- [x] Add `"bin": { "charon": "./cli/charon.js" }` to `skeleton/package.json`.
+- [x] Write integration tests in `skeleton/cli/cli.test.js` using `node:child_process` `spawn`:
   - `judge` with a fixture artifact and gate → stdout contains valid verdict JSON, exit code matches status.
   - `judge --ledger` → ledger file created, contains the verdict line.
   - `verify-ledger` on a valid ledger → `{ ok: true }`, exit 0.
