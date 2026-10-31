@@ -1,0 +1,11 @@
+{
+  "name": "@charon/skeleton",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "charon": "./cli/charon.js"
+  },
+  "devDependencies": {
+    "fast-check": "^3.22.0"
+  }
+}

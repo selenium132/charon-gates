@@ -7,10 +7,10 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 1 — Scaffold the skeleton package
 
-- [ ] Create `skeleton/package.json` with `"type": "module"`, `"name": "@charon/skeleton"`, and dev dependency `fast-check`.
-- [ ] Create `skeleton/core/types.js` containing only JSDoc `@typedef` blocks for `Evidence`, `Check`, `Finding`, `GateDef`, `Verdict`, and `LedgerEntry` (no runtime code).
-- [ ] Create `skeleton/core/index.js` as an empty barrel (will be populated in later tasks).
-- [ ] Verify: `node --input-type=module <<< 'import "./skeleton/core/index.js"'` exits 0.
+- [x] Create `skeleton/package.json` with `"type": "module"`, `"name": "@charon/skeleton"`, and dev dependency `fast-check`.
+- [x] Create `skeleton/core/types.js` containing only JSDoc `@typedef` blocks for `Evidence`, `Check`, `Finding`, `GateDef`, `Verdict`, and `LedgerEntry` (no runtime code).
+- [x] Create `skeleton/core/index.js` as an empty barrel (will be populated in later tasks).
+- [x] Verify: `node --input-type=module <<< 'import "./skeleton/core/index.js"'` exits 0.
 
 **Acceptance**: package exists, `"type":"module"` is set, `types.js` parses without error, `index.js` imports cleanly.
 
