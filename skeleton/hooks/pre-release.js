@@ -88,9 +88,15 @@ async function main() {
     process.stderr.write(`BLOCKED: direct write to ledger ${ledgerPath}\n`);
     process.exit(2);
   }
-  // Also block execute_bash commands that target the ledger path
-  if (command && command.includes(ledgerPath)) {
-    process.stderr.write(`BLOCKED: shell command targets ledger ${ledgerPath}\n`);
+  // Block shell commands that write to the ledger path (redirect or charon judge --ledger)
+  // Use a targeted pattern: the path must appear after a redirection or --ledger flag,
+  // not merely be mentioned in a comment or message.
+  if (command && (
+    new RegExp(`>\\s*${ledgerPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(command) ||
+    new RegExp(`--ledger\\s+${ledgerPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(command) ||
+    new RegExp(`appendFile.*${ledgerPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(command)
+  )) {
+    process.stderr.write(`BLOCKED: shell command writes to ledger ${ledgerPath}\n`);
     process.exit(2);
   }
 

@@ -329,4 +329,16 @@ describe('D7: hook — blocks write tool targeting the ledger path', () => {
     assert.equal(code, 2);
     assert.ok(stderr.length > 0);
   });
+
+  it('execute_bash with redirect to ledgerPath → exit 2', async () => {
+    const ledgerPath = join(tmpDir, 'ledger-d7-4.jsonl');
+    const verdict = await judge(PASS_GATE, {}, ARTIFACT_CONTENT);
+    await buildLedger(ledgerPath, [{ type: 'verdict', ...verdict }]);
+    await writeConfig({ ledgerPath });
+
+    // A command that redirects output to the ledger file
+    const { code, stderr } = await runHook(tmpDir, kiroPayload('execute_bash', `echo tampered > ${ledgerPath}`));
+    assert.equal(code, 2);
+    assert.ok(stderr.length > 0);
+  });
 });

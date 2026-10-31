@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Charon Toll Gate",
+      "trigger": "PreToolUse",
+      "matcher": "execute_bash|fs_write|str_replace|fs_append",
+      "action": {
+        "type": "command",
+        "command": "node skeleton/hooks/pre-release.js || exit 2"
+      }
+    }
+  ]
+}

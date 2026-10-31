@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "charon": {
+      "command": "node",
+      "args": ["skeleton/mcp/server.js"],
+      "disabled": false
+    }
+  }
+}

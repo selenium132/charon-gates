@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Run Skeleton Tests on Save",
+      "trigger": "PostFileSave",
+      "matcher": "skeleton/.*\\.js$",
+      "action": {
+        "type": "command",
+        "command": "cd skeleton && node --test 2>&1"
+      }
+    }
+  ]
+}

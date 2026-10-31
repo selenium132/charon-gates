@@ -1,0 +1,6 @@
+{
+  "ledgerPath": ".charon/ledger.jsonl",
+  "artifactPath": "skeleton/cli/fixtures/artifact.bin",
+  "gatePath": "skeleton/cli/fixtures/pass.gate.js",
+  "releasePattern": "npm publish|git push|gh release"
+}
