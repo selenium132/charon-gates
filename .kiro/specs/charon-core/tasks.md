@@ -119,10 +119,10 @@ Each task ends with a passing test run (`node --test`) unless noted otherwise.
 
 ## Task 8 — Implement `hooks/pre-release.js`
 
-- [ ] Create `skeleton/hooks/pre-release.js` following the design (§3.7).
-- [ ] Document the `charon-hook.json` sidecar format in a comment block at the top of the file.
-- [ ] Create `skeleton/hooks/charon-hook.example.json` as a reference config.
-- [ ] Write unit tests in `skeleton/hooks/hooks.test.js` using an in-memory ledger and fake hook payloads:
+- [x] Create `skeleton/hooks/pre-release.js` following the design (§3.7).
+- [x] Document the `charon-hook.json` sidecar format in a comment block at the top of the file.
+- [x] Create `skeleton/hooks/charon-hook.example.json` as a reference config.
+- [x] Write unit tests in `skeleton/hooks/hooks.test.js` using an in-memory ledger and fake hook payloads:
   - Payload is not a release command → exit 0.
   - Payload is a release command, ledger has matching PASS → exit 0, stdout `{}`.
   - Payload is a release command, ledger has no matching PASS → exit 2, stderr non-empty.

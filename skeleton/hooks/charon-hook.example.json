@@ -1,0 +1,5 @@
+{
+  "ledgerPath": ".charon/ledger.jsonl",
+  "artifactPath": "dist/output.mp4",
+  "releasePattern": "release"
+}
