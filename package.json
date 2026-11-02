@@ -1,0 +1,10 @@
+{
+  "name": "charon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm --prefix skeleton install && npm --prefix apps/ghost-viewer install && npm --prefix apps/seance install",
+    "test": "npm --prefix skeleton test && npm --prefix apps/ghost-viewer test && npm --prefix apps/seance test"
+  }
+}
