@@ -143,6 +143,8 @@ Built with Kiro (CLI, spec mode) and reviewed and fixed with Claude Code. The sp
 - One real example: the hook Kiro wrote read `toolName`, but the Kiro CLI sends `tool_name`. All 46 tests passed and
   the hook blocked nothing. A run in the real CLI showed it; the fix is task T5 (defect D5) in `toll-fixes`.
 
+The specs in `.kiro/specs/` keep the original design as Kiro wrote it. Where a later bugfix spec changed something (for example the gate hash now covers check parameters and source), the bugfix spec is the current rule and the code and tests match it.
+
 Only Kiro CLI was used. Kiro IDE, Web, Crew and powers were not.
 
 ---
@@ -166,3 +168,4 @@ No other third-party code, training data, or statistics about users appear in th
 - The hook only sees tool calls the agent runtime reports. It blocks on exit code 2; any other non-zero exit lets the call through, which is why the hook command ends in `|| exit 2`.
 - ghost-viewer thresholds are the author's estimates, not platform figures. The UI-band fractions (top 8%, bottom 20%, right 12%) were tuned on a handful of videos. The false-positive rate has not been measured.
 - seance uses a normal approximation on paired differences. With few pairs it is generous; the `sample-size` check exists to refuse that case.
+- The hook's ledger-write guard matches common shell patterns (a redirect, `--ledger <path>`, `appendFile`). It does not parse shell, so a determined agent can find another way to write the file. Keep the ledger outside the agent's write permissions if that matters.
