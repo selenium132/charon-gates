@@ -77,13 +77,31 @@ Tests use the built-in `node:test` runner. Property tests use `fast-check` (dev 
 
 ---
 
-## How to enable the Kiro hook
+## Try the apps
 
-The hook at `.kiro/hooks/` (or `charon-hook.json` at the project root) fires when a
-file is saved and runs the gate against the changed artifact. Edit the hook file to
-point at the gate you want to use.
+Both apps are static pages: no server code, no account, no key. Nothing leaves the browser.
 
-See `skeleton/hooks/charon-hook.example.json` for a working template.
+```sh
+python3 -m http.server 8000     # from the repository root, any static server works
+# open http://localhost:8000/ and choose a door
+```
+
+- `apps/ghost-viewer/`: drop a vertical video, or press a sample button (cursed: 5 of 9 checks fail; clean: PASS; no sound track: HOLD).
+- `apps/seance/`: press "The ghost" (FAIL) or "The real thing" (PASS), or paste your own paired scores.
+
+---
+
+## How to enable the Kiro hooks
+
+Two hooks live in `.kiro/hooks/`:
+
+- `toll-gate.json` (PreToolUse): before the agent runs a shell command or writes a file, it runs
+  `skeleton/hooks/pre-release.js`. If the command matches `releasePattern` in `charon-hook.json` and the ledger has
+  no current PASS (or named override) for the artifact and gate, the hook exits with code 2 and the call is blocked.
+- `test-on-save.json` (PostFileSave): runs the skeleton tests when a skeleton file is saved.
+
+Edit `charon-hook.json` (`artifactPath`, `gatePath`, `releasePattern`) to point at your own gate.
+`skeleton/hooks/charon-hook.example.json` is a template.
 
 ---
 
@@ -108,7 +126,24 @@ To register it in Kiro, add an entry to `.kiro/settings/mcp.json`:
 }
 ```
 
-Then restart or reconnect the MCP server from the Kiro panel.
+Then restart or reconnect the MCP server from the Kiro panel. This repository already ships that entry in
+`.kiro/settings/mcp.json`.
+
+---
+
+## How it was built
+
+Built with Kiro (CLI, spec mode) and reviewed and fixed with Claude Code. The split:
+
+- Written by Claude Code, from the author's brief: the steering files in `.kiro/steering/`.
+- Generated with Kiro from those steering files: the specs in `.kiro/specs/` (requirements, design, tasks), the core,
+  the apps, the tests, the hooks and the `ferryman` agent.
+- Done with Claude Code: running the result for real, finding defects (recorded as the bugfix specs
+  `toll-fixes` and `field-test-fixes`), and implementing the last fixes after the Kiro free quota ran out.
+- One real example: the hook Kiro wrote read `toolName`, but the Kiro CLI sends `tool_name`. All 46 tests passed and
+  the hook blocked nothing. A run in the real CLI showed it; the fix is task T5 (defect D5) in `toll-fixes`.
+
+Only Kiro CLI was used. Kiro IDE, Web, Crew and powers were not.
 
 ---
 

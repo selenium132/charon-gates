@@ -43,7 +43,7 @@ node skeleton/cli/charon.js verify-ledger .charon/ledger.jsonl
 
 5. Wire the PreToolUse hook to block releases without a PASS:
    - Copy `hooks/charon-hook.example.json` to `charon-hook.json` and fill in your paths.
-   - Add `.kiro/hooks/pre-release.json` pointing to `skeleton/hooks/pre-release.js`.
+   - Add a PreToolUse hook file under `.kiro/hooks/` that runs `node skeleton/hooks/pre-release.js || exit 2` (see `.kiro/hooks/toll-gate.json`).
 
 ---
 
