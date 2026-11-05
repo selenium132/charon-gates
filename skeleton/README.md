@@ -1,6 +1,6 @@
 # Charon skeleton
 
-Charon is a skeleton template for building **evidence gates**: small programs that decide whether an artifact may leave the workshop, and whose verdict an AI agent cannot talk its way past. It solves one problem — AI agents grade their own work — by replacing self-assessment with measured evidence. Every gate reads numbers from an artifact, compares them to thresholds, and writes a tamper-evident verdict to an append-only ledger. The gate either passes the artifact or holds it; there is no third opinion.
+Charon is a skeleton template for building **evidence gates**: small programs that decide whether an artifact may leave the workshop, and whose verdict an AI agent cannot talk its way past. It solves one problem, AI agents grade their own work, by replacing self-assessment with measured evidence. Every gate reads numbers from an artifact, compares them to thresholds, and writes a tamper-evident verdict to an append-only ledger. The gate either passes the artifact or holds it; there is no third opinion.
 
 ---
 
