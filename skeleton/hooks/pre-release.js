@@ -77,25 +77,32 @@ async function main() {
   const command = payload.tool_input?.command ?? '';
   const targetPath = payload.tool_input?.path ?? payload.tool_input?.file_path ?? '';
 
+  // --- F9: look at the command after removing shell quoting tricks ---
+  // Quotes, backslashes and empty ${x} expansions can split a word without changing
+  // what the shell runs ("ch""aron", ove\rride). Dynamic parts ($, backtick) are
+  // treated as suspicious when they sit next to the word override.
+  const flat = command.replace(/\$\{[^}]*\}/g, '').replace(/["'\\`]/g, '').replace(/\s+/g, ' ');
+  const dynamic = /\$\{|\$\(|`/.test(command);
+
   // --- D7: block charon override commands ---
-  if (/charon/i.test(command) && /override/i.test(command)) {
+  if (/override/i.test(flat) && (/charon/i.test(flat) || dynamic)) {
     process.stderr.write('BLOCKED: charon override via agent is not permitted\n');
     process.exit(2);
   }
 
   // --- D7: block direct writes to the ledger file ---
-  if (targetPath && targetPath === ledgerPath) {
+  const norm = (p) => String(p).replace(/^(\.\/)+/, '');
+  const ledgerNorm = norm(ledgerPath);
+  if (targetPath && norm(targetPath) === ledgerNorm) {
     process.stderr.write(`BLOCKED: direct write to ledger ${ledgerPath}\n`);
     process.exit(2);
   }
-  // Block shell commands that write to the ledger path (redirect or charon judge --ledger)
-  // Use a targeted pattern: the path must appear after a redirection or --ledger flag,
-  // not merely be mentioned in a comment or message.
-  if (command && (
-    new RegExp(`>\\s*${ledgerPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(command) ||
-    new RegExp(`--ledger\\s+${ledgerPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(command) ||
-    new RegExp(`appendFile.*${ledgerPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(command)
-  )) {
+  // Block shell commands that write to the ledger path: any mention of the path
+  // together with a write verb or redirection. Reading it (cat, tail, grep) stays allowed.
+  const esc = ledgerNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const mentions = new RegExp(esc).test(flat);
+  const writes = />|\b(tee|cp|mv|dd|truncate|sed\s+-i|install|ln|perl\s+-i|rm|unlink)\b|\b(write|append)\w*|--ledger\b/i.test(flat);
+  if (mentions && writes) {
     process.stderr.write(`BLOCKED: shell command writes to ledger ${ledgerPath}\n`);
     process.exit(2);
   }
