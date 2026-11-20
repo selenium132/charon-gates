@@ -58,7 +58,15 @@ export async function judge(gateDef, evidence, artifactBytes) {
     let finding;
     try {
       finding = await check(evidence);
-      if (finding.measured == null) {
+      if (
+        finding == null ||
+        typeof finding.checkId !== 'string' ||
+        finding.checkId === '' ||
+        finding.threshold === undefined
+      ) {
+        // F3: a finding must name its check and state its threshold.
+        forceHold = true;
+      } else if (finding.measured == null) {
         forceHold = true;
       } else if (!isValidMeasured(finding.measured)) {
         forceHold = true;

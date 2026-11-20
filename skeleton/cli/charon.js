@@ -89,7 +89,8 @@ switch (subCommand) {
         evidence = await mod.readEvidence(artifactPath);
       }
     } catch {
-      // ignore — evidence defaults to {}
+      // F1, F2: a failed evidence read is null, not {}; judge() turns null into HOLD.
+      evidence = null;
     }
 
     const verdict = await judge(gateDef, evidence, new Uint8Array(bytes));
