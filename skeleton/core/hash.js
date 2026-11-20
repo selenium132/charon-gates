@@ -23,6 +23,9 @@ export async function artifactHash(bytes) {
  * @returns {Promise<string>} Lowercase 64-character hex string.
  */
 export async function gateHash(gateDef) {
+  if (typeof gateDef?.id !== 'string' || gateDef.id === '' || typeof gateDef.version !== 'string' || gateDef.version === '') {
+    throw new TypeError('gateHash: gate needs a non-empty string id and version');
+  }
   const payload = JSON.stringify({
     checks: gateDef.checks.map((fn) => ({
       checkId: fn.checkId,

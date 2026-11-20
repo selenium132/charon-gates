@@ -32,7 +32,15 @@ export function createLedger(readLines, appendLine) {
    * @param {object} entry - Plain object to persist (must be JSON-serialisable).
    * @returns {Promise<void>}
    */
-  async function append(entry) {
+  let queue = Promise.resolve();
+  function append(entry) {
+    // Serialise appends made through this ledger object (Ferryman F7, in-process part).
+    const run = queue.then(() => appendOnce(entry));
+    queue = run.catch(() => {});
+    return run;
+  }
+
+  async function appendOnce(entry) {
     const lines = await readLines();
     const prevHash =
       lines.length === 0 ? 'GENESIS' : await sha256ofLine(lines[lines.length - 1]);
@@ -68,6 +76,9 @@ export function createLedger(readLines, appendLine) {
       } catch {
         return { ok: false, firstBadIndex: i };
       }
+      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return { ok: false, firstBadIndex: i };
+      }
       if (parsed.prevHash !== expected) {
         return { ok: false, firstBadIndex: i };
       }
@@ -76,7 +87,7 @@ export function createLedger(readLines, appendLine) {
   }
 
   /**
-   * Returns the last `n` entries as parsed objects. Skips unparseable lines.
+   * Returns the last `n` entries as parsed objects. An unparseable line is returned as `{ corrupt: true, raw }` so it stays visible and never matches a verdict (Ferryman F6).
    * @param {number} [n=10]
    * @returns {Promise<LedgerEntry[]>}
    */
@@ -84,7 +95,7 @@ export function createLedger(readLines, appendLine) {
     const lines = await readLines();
     const results = [];
     for (const l of lines.slice(-n)) {
-      try { results.push(JSON.parse(l)); } catch { /* skip corrupt line */ }
+      try { results.push(JSON.parse(l)); } catch { results.push({ corrupt: true, raw: l }); }
     }
     return results;
   }
