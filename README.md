@@ -1,7 +1,24 @@
 # Charon
+Release gates for AI agents: no measured PASS, no release. Skeleton Crew entry, two apps: `apps/ghost-viewer/`, `apps/seance/`.
 
-A skeleton template for building evidence gates: small programs that decide whether an
-artifact may leave the workshop, and whose verdict an AI agent cannot talk its way past.
+1. Open <PAGES URL>/apps/ghost-viewer/ and press a sample button. No file, no login.
+2. Open <PAGES URL>/apps/seance/ and press "The ghost", then "The real thing". Scan view: <PAGES URL>/apps/ghost-viewer/scan.html
+3. Run `npm run install:all && npm test`.
+
+## Kiro spec to running code
+
+| Kiro artifact | What it makes | Result you can run |
+|---|---|---|
+| `.kiro/specs/charon-core/` (requirements, design, tasks) | `skeleton/core/`, `skeleton/cli/charon.js` | `skeleton` tests: 99 pass, 0 fail |
+| `.kiro/specs/ghost-viewer/` | `apps/ghost-viewer/gate.js` (9 checks) | `node --test gate.test.js scan-timeline.test.js`: 38 pass |
+| `.kiro/specs/seance/` | `apps/seance/gate.js` (7 checks) | `node --test` in `apps/seance`: 36 tests |
+| `.kiro/specs/toll-fixes/bugfix.md` | `skeleton/hooks/pre-release.js` fixes D5-D8 | `skeleton/hooks/hooks.test.js` |
+| `.kiro/hooks/toll-gate.json` (PreToolUse) | runs `skeleton/hooks/pre-release.js` before shell and write tools | `echo '{"tool_name":"execute_bash","tool_input":{"command":"npm publish"}}' \| node skeleton/hooks/pre-release.js` prints `BLOCKED: no current PASS or override ...`, exit 2; `ls` exits 0 |
+| `.kiro/agents/ferryman.json` (read-only reviewer) | findings F1-F9 on the Toll rules | fixes in git log: F1-F3, F4/F6/F7, F8, F9 |
+| `.kiro/hooks/test-on-save.json`, `.kiro/settings/mcp.json`, `.kiro/steering/` | tests on save; `skeleton/mcp/server.js` (`judge`, `ledger_tail`); product and tech rules | see `KIRO_WRITEUP.md` |
+
+Claude Code wrote the two steering files and did the hand fixes, `scan.html` and the F8 prompt guard; `KIRO_WRITEUP.md` lists which.
+
 
 ---
 
@@ -145,7 +162,7 @@ Built with Kiro (CLI, spec mode) and reviewed and fixed with Claude Code. The sp
 
 The specs in `.kiro/specs/` keep the original design as Kiro wrote it. Where a later bugfix spec changed something (for example the gate hash now covers check parameters and source), the bugfix spec is the current rule and the code and tests match it.
 
-Only Kiro CLI was used. Kiro IDE, Web, Crew and powers were not.
+Of the Kiro products, only Kiro CLI was used. Kiro IDE, Web, Crew and powers were not.
 
 ---
 

@@ -61,6 +61,13 @@
       text-transform: uppercase;
     }
 
+    .lede {
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      max-width: 640px;
+    }
+
     /* Drop zone */
     #drop-zone {
       border: 1px dashed var(--border);
@@ -187,6 +194,11 @@
     </header>
 
     <main>
+      <p class="lede">
+        An AI agent can report that a video is ready while the picture freezes, the sound drops out and the captions sit under the app's buttons.
+        Drop the real file here. Nine measured checks decide PASS, FAIL or HOLD, and the agent
+        cannot overrule the numbers. The three buttons below use built-in test data.
+      </p>
       <div
         id="drop-zone"
         role="button"
@@ -200,10 +212,10 @@
       </div>
 
       <div class="btn-row">
-        <button id="btn-cursed" type="button">Judge the cursed sample</button>
-        <button id="btn-clean" type="button">Judge the clean sample</button>
-        <button id="btn-nosound" type="button">Judge a video with no sound track</button>
-        <span class="synthetic-label" aria-label="These buttons use synthetic data">synthetic data — no file needed</span>
+        <button id="btn-cursed" type="button">Try a bad video (FAIL)</button>
+        <button id="btn-clean" type="button">Try a good video (PASS)</button>
+        <button id="btn-nosound" type="button">Try a video with no audio (HOLD)</button>
+        <span class="synthetic-label" aria-label="These buttons use built-in test data">built-in test data, no file needed</span>
       </div>
 
       <div id="status-line" role="status" aria-live="polite"></div>

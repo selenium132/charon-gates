@@ -12,6 +12,18 @@ import { renderContactSheet } from './sheet.js';
 import { createLocalStorageLedger } from '../../skeleton/web/localStorage-ledger.js';
 import { renderVerdict } from '../../skeleton/web/verdict-renderer.js';
 
+const EXPLAIN = {
+  'aspect-ratio': { dir: '≈', meaning: 'Width ÷ height must match 9:16, or platforms crop or letterbox it.' },
+  'resolution': { dir: '≥', meaning: 'Short side in pixels; below the minimum the video looks soft on a phone.' },
+  'duration': { dir: '≤', meaning: 'Length in seconds; longer than the limit is not a Short.' },
+  'black-frames': { dir: '≤', meaning: 'Share of sampled frames that are almost black. A black opening makes viewers swipe away.' },
+  'frozen-run': { dir: '≤', meaning: 'Longest stretch where the picture does not change, in seconds.' },
+  'silence-run': { dir: '≤', meaning: 'Longest stretch with no sound, in seconds. HOLD if there is no audio track to measure.' },
+  'ui-band-intrusion': { dir: '≤', meaning: 'Share of the app-covered top, bottom and right bands that holds important detail.' },
+  'off-centre-layout': { dir: '≤', meaning: 'How far the main content sits from the horizontal centre, in percent.' },
+  'opening-motion': { dir: '≥', meaning: 'Average frame-to-frame change in the first seconds. Too low means a dead opening.' },
+};
+
 const LEDGER_KEY = 'charon:ghost-viewer:ledger';
 const ledger = createLocalStorageLedger(LEDGER_KEY);
 
@@ -118,11 +130,11 @@ async function runGate(evidence, artifactBytes, label) {
   const effectiveEvidence = evidence.frames.length === 0 ? null : evidence;
   const verdict = await judge(GATE_DEF, effectiveEvidence, artifactBytes);
 
-  setStatus('Done.');
+  setStatus('Measured. The verdict below comes from the numbers.');
 
   // Render verdict
   verdictArea.innerHTML = '';
-  verdictArea.appendChild(renderVerdict(verdict, label));
+  verdictArea.appendChild(renderVerdict(verdict, label, { explain: EXPLAIN, summary: true, sourceNote: 'Source of every number: measured in this browser from the sampled frames and audio of the file above (the built-in samples use generated data). The two hashes bind this verdict to that exact input and this exact gate.' }));
 
   // Render contact sheet
   contactArea.innerHTML = '';

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ghost Viewer - Live scan</title>
+<style>
+  :root { --bg:#0a0a0c; --surface:#111115; --text:#e8e0d0; --dim:#7a7068; --pass:#3a7d44; --fail:#b02a2a; --border:#2a2a30; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font:16px/1.5 system-ui,sans-serif; padding:1.5rem 1rem 3rem; }
+  .page { max-width:860px; margin:0 auto; }
+  h1 { font-size:1.2rem; letter-spacing:.1em; }
+  p.lede { color:var(--dim); font-size:.85rem; margin:.3rem 0 1rem; }
+  .row { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+  button { background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:.5rem .9rem; font:inherit; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:default; }
+  .lane { margin:.6rem 0; }
+  .lane h2 { font-size:.75rem; color:var(--dim); font-weight:600; letter-spacing:.06em; text-transform:uppercase; display:flex; justify-content:space-between; }
+  .strip { display:flex; gap:2px; height:34px; margin-top:.25rem; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:3px; }
+  .cell { flex:1; background:#1c1c22; border-radius:2px; transition:background .12s; }
+  .cell.on { background:var(--pass); }
+  .cell.bad { background:var(--fail); }
+  .cell.cur { outline:2px solid var(--text); outline-offset:1px; }
+  .cell.na { background:#3a3320; }
+  .meter { font-family:ui-monospace,monospace; font-size:.8rem; }
+  .meter.tripped { color:#ff8a8a; font-weight:700; }
+  #clock { font-family:ui-monospace,monospace; color:var(--dim); font-size:.85rem; margin:.5rem 0; }
+  #final { margin-top:1.2rem; font-family:ui-monospace,monospace; font-size:.85rem; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<main class="page">
+  <h1>GHOST VIEWER - LIVE SCAN</h1>
+  <p class="lede">A playhead walks the sampled frames and sound of a short. Each lane keeps a running number for one check and turns red the moment it passes its limit. The last numbers are the gate's own (a test compares them).</p>
+  <div class="row">
+    <button id="s-cursed" type="button">Scan the bad video</button>
+    <button id="s-clean" type="button">Scan the good video</button>
+    <button id="s-nosound" type="button">Scan the video with no audio</button>
+  </div>
+  <div id="clock" role="status" aria-live="polite">Press a button to start.</div>
+  <section class="lane"><h2><span>Picture: black frames</span><span id="m-black" class="meter"></span></h2><div class="strip" id="l-black"></div></section>
+  <section class="lane"><h2><span>Picture: frozen run (limit 3 s)</span><span id="m-frozen" class="meter"></span></h2><div class="strip" id="l-frozen"></div></section>
+  <section class="lane"><h2><span>Sound: silence run (limit 2 s)</span><span id="m-silence" class="meter"></span></h2><div class="strip" id="l-silence"></div></section>
+  <pre id="final" aria-live="polite"></pre>
+  <p class="lede"><a href="./index.html">Full gate with all 9 checks and the ledger</a></p>
+</main>
+<script type="module" src="./scan.js"></script>
+</body>
+</html>

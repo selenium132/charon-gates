@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "node --test gate.test.js"
+    "test": "node --test gate.test.js scan-timeline.test.js"
   },
   "devDependencies": {
     "fast-check": "^3.22.0"

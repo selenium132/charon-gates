@@ -13,6 +13,7 @@ import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
+import { overrideTerminalProblem } from './prompt-guard.js';
 import { judge, createLedger, buildOverrideEntry } from '../core/index.js';
 
 /** @param {string} msg */
@@ -129,10 +130,14 @@ switch (subCommand) {
     if (!ledgerPath) die(USAGE);
 
     // Rule 5: override requires a human at an interactive terminal.
-    if (!process.stdin.isTTY) {
-      process.stderr.write(
-        'override requires an interactive terminal (process.stdin.isTTY must be true)\n'
-      );
+    // F8: the prompt goes to stderr and both streams must be a terminal, so output
+    // redirection cannot hide the confirmation from the human.
+    const termProblem = overrideTerminalProblem({
+      stdinIsTTY: process.stdin.isTTY,
+      stderrIsTTY: process.stderr.isTTY,
+    });
+    if (termProblem) {
+      process.stderr.write(termProblem + '\n');
       process.exit(2);
     }
 
@@ -156,11 +161,11 @@ switch (subCommand) {
 
     // Prompt the human to confirm by typing the first 8 chars of the artifact hash.
     const expectedPrefix = lastVerdict.artifactHash.slice(0, 8);
-    process.stdout.write(
+    process.stderr.write(
       `Type the first 8 characters of the artifact hash to confirm (${expectedPrefix}): `
     );
     const typed = await new Promise((resolve) => {
-      const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: false });
+      const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: false });
       rl.once('line', (line) => { rl.close(); resolve(line.trim()); });
     });
     if (typed !== expectedPrefix) {

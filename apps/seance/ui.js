@@ -146,7 +146,7 @@ async function runGate(ev, artifactBytes, label) {
   const effectiveEvidence = (ev.pairs.length === 0 && ev.fileHash == null) ? null : ev;
   const verdict = await judge(GATE_DEF, effectiveEvidence, artifactBytes);
 
-  setStatus('Done.');
+  setStatus('Measured. The verdict below comes from the numbers.');
 
   // Verdict card
   verdictArea.innerHTML = '';
