@@ -1,8 +1,8 @@
 # Charon
 Release gates for AI agents: no measured PASS, no release. Skeleton Crew entry, two apps: `apps/ghost-viewer/`, `apps/seance/`.
 
-1. Open <PAGES URL>/apps/ghost-viewer/ and press a sample button. No file, no login.
-2. Open <PAGES URL>/apps/seance/ and press "The ghost", then "The real thing". Scan view: <PAGES URL>/apps/ghost-viewer/scan.html
+1. Open https://charon-gates.pages.dev/apps/ghost-viewer/ and press a sample button. No file, no login.
+2. Open https://charon-gates.pages.dev/apps/seance/ and press "The ghost", then "The real thing". Scan view: https://charon-gates.pages.dev/apps/ghost-viewer/scan.html
 3. Run `npm run install:all && npm test`.
 
 ## Kiro spec to running code
